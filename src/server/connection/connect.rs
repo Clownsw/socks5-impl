@@ -1,4 +1,4 @@
-use socks5_proto::{Address, Reply, Response};
+use crate::protocol::{Address, Reply, Response};
 use std::{
     io::{IoSlice, Result},
     net::SocketAddr,

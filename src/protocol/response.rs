@@ -1,4 +1,4 @@
-use crate::{Address, Reply};
+use crate::protocol::{Address, Reply, SOCKS_VERSION};
 use bytes::{BufMut, BytesMut};
 use std::io::{Error, ErrorKind, Result};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -29,7 +29,7 @@ impl Response {
     {
         let ver = r.read_u8().await?;
 
-        if ver != crate::SOCKS_VERSION {
+        if ver != SOCKS_VERSION {
             return Err(Error::new(
                 ErrorKind::Unsupported,
                 format!("Unsupported SOCKS version {0:#x}", ver),
@@ -55,7 +55,7 @@ impl Response {
     }
 
     pub fn write_to_buf<B: BufMut>(&self, buf: &mut B) {
-        buf.put_u8(crate::SOCKS_VERSION);
+        buf.put_u8(SOCKS_VERSION);
         buf.put_u8(u8::from(self.reply));
         buf.put_u8(0x00);
         self.address.write_to_buf(buf);

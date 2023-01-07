@@ -1,5 +1,5 @@
-use socks5_proto::{Address, Reply};
-use socks5_server::{auth::NoAuth, Connection, IncomingConnection, Server};
+use socks5_impl::protocol::{Address, Reply};
+use socks5_impl::server::{auth::NoAuth, Connection, IncomingConnection, Server};
 use std::{io::Result, sync::Arc};
 use tokio::{io, net::TcpStream};
 

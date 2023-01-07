@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use socks5_proto::{
+use crate::protocol::{
     handshake::password::{Request as PasswordRequest, Response as PasswordResponse},
     HandshakeMethod,
 };
@@ -8,7 +8,7 @@ use tokio::net::TcpStream;
 
 /// This trait is for defining the socks5 authentication method.
 ///
-/// Pre-defined authentication methods can be found in the [`auth`](https://docs.rs/socks5-server/latest/socks5_server/auth/index.html) module.
+/// Pre-defined authentication methods can be found in the [`auth`](https://docs.rs/socks5-impl/latest/socks5_impl/server/auth/index.html) module.
 ///
 /// You can create your own authentication method by implementing this trait. Since GAT is not stabled yet, [async_trait](https://docs.rs/async-trait/latest/async_trait/index.html) needs to be used.
 ///
@@ -16,8 +16,8 @@ use tokio::net::TcpStream;
 /// ```rust
 /// use async_trait::async_trait;
 /// use std::io::Result;
-/// use socks5_proto::HandshakeMethod;
-/// use socks5_server::Auth;
+/// use socks5_impl::protocol::HandshakeMethod;
+/// use socks5_impl::server::Auth;
 /// use tokio::net::TcpStream;
 ///
 /// pub struct MyAuth;

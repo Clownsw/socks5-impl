@@ -1,12 +1,77 @@
-# socks5-server
+# socks5-impl
 
-Relatively low-level asynchronized SOCKS5 server library based on tokio.
+Fundamental abstractions and async read / write functions for SOCKS5 protocol and Relatively low-level asynchronized SOCKS5 server implementation based on tokio.
 
-This repo includes two crates:
-- [socks5-server](https://github.com/EAimTY/socks5-server/tree/master/socks5-server) - Provides a relatively low-level asynchronized SOCKS5 server implementation based on tokio
-- [socks5-proto](https://github.com/EAimTY/socks5-server/tree/master/socks5-proto) - Provides fundamental abstractions and async read / write functions for SOCKS5 protocol
+This repo hosts at [socks5-impl](https://github.com/ssrlive/socks5-impl/tree/master/socks5-impl)
 
-This project is used in [TUIC](https://github.com/EAimTY/tuic). Check it out for more inspiration.
+[![Version](https://img.shields.io/crates/v/socks5-impl.svg?style=flat)](https://crates.io/crates/socks5-impl)
+[![Documentation](https://img.shields.io/badge/docs-release-brightgreen.svg?style=flat)](https://docs.rs/socks5-impl)
+[![License](https://img.shields.io/crates/l/socks5-impl.svg?style=flat)](https://github.com/ssrlive/socks5-impl/blob/master/LICENSE)
+
+## Features
+
+- Fully asynchronized
+- Supports all SOCKS5 commands
+  - CONNECT
+  - BIND
+  - ASSOCIATE
+- Customizable authentication
+    - No authentication
+    - Username / password
+    - GSSAPI
+
+## Usage
+
+The entry point of this crate is [`socks5_impl::server::Server`](https://docs.rs/socks5-impl/latest/server/struct.Server.html).
+
+Check [examples](https://github.com/ssrlive/socks5-impl/tree/master/socks5-impl/examples) for usage examples.
+
+## Example
+
+```rust no_run
+use socks5_impl::protocol::{
+    Address, HandshakeMethod, HandshakeRequest, HandshakeResponse, Reply, Request, Response,
+};
+use std::io;
+use tokio::{io::AsyncWriteExt, net::TcpListener};
+
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    let listener = TcpListener::bind("127.0.0.1:5000").await?;
+    let (mut stream, _) = listener.accept().await?;
+
+    let hs_req = HandshakeRequest::read_from(&mut stream).await?;
+
+    if hs_req.methods.contains(&HandshakeMethod::None) {
+        let hs_resp = HandshakeResponse::new(HandshakeMethod::None);
+        hs_resp.write_to(&mut stream).await?;
+    } else {
+        let hs_resp = HandshakeResponse::new(HandshakeMethod::Unacceptable);
+        hs_resp.write_to(&mut stream).await?;
+        let _ = stream.shutdown().await;
+        return Err(io::Error::new(
+            io::ErrorKind::Unsupported,
+            "No available handshake method provided by client",
+        ));
+    }
+
+    let req = match Request::read_from(&mut stream).await {
+        Ok(req) => req,
+        Err(err) => {
+            let resp = Response::new(Reply::GeneralFailure, Address::unspecified());
+            resp.write_to(&mut stream).await?;
+            let _ = stream.shutdown().await;
+            return Err(err);
+        }
+    };
+
+    match req.command {
+        _ => {} // process request
+    }
+
+    Ok(())
+}
+```
 
 ## License
 GNU General Public License v3.0

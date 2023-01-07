@@ -1,4 +1,4 @@
-use crate::HandshakeMethod;
+use crate::protocol::{HandshakeMethod, SOCKS_VERSION};
 use bytes::{BufMut, BytesMut};
 use std::{
     io::{Error, ErrorKind, Result},
@@ -31,7 +31,7 @@ impl HandshakeRequest {
     {
         let ver = r.read_u8().await?;
 
-        if ver != crate::SOCKS_VERSION {
+        if ver != SOCKS_VERSION {
             return Err(Error::new(
                 ErrorKind::Unsupported,
                 format!("Unsupported SOCKS version {0:#x}", ver),
@@ -65,7 +65,7 @@ impl HandshakeRequest {
     }
 
     pub fn write_to_buf<B: BufMut>(&self, buf: &mut B) {
-        buf.put_u8(crate::SOCKS_VERSION);
+        buf.put_u8(SOCKS_VERSION);
         buf.put_u8(self.methods.len() as u8);
 
         let methods = unsafe { mem::transmute(self.methods.as_slice()) };

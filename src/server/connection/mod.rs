@@ -1,6 +1,6 @@
 use self::{associate::Associate, bind::Bind, connect::Connect};
-use crate::Auth;
-use socks5_proto::{
+use crate::server::Auth;
+use crate::protocol::{
     Address, Command, HandshakeMethod, HandshakeRequest, HandshakeResponse, Reply, Request,
     Response,
 };

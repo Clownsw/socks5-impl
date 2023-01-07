@@ -1,5 +1,5 @@
 use bytes::{Bytes, BytesMut};
-use socks5_proto::{Address, Reply, Response, UdpHeader};
+use crate::protocol::{Address, Reply, Response, UdpHeader};
 use std::{
     io::Result,
     net::SocketAddr,
@@ -12,7 +12,7 @@ use tokio::{
 
 /// Socks5 connection type `Associate`
 ///
-/// [`AssociatedUdpSocket`](https://docs.rs/socks5-server/latest/socks5_server/connection/associate/struct.AssociatedUdpSocket.html) can be used as the associated UDP socket.
+/// [`AssociatedUdpSocket`](https://docs.rs/socks5-impl/latest/socks5_impl/server/connection/associate/struct.AssociatedUdpSocket.html) can be used as the associated UDP socket.
 #[derive(Debug)]
 pub struct Associate<S> {
     stream: TcpStream,

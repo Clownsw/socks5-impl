@@ -1,4 +1,4 @@
-use crate::Address;
+use crate::protocol::address::Address;
 use bytes::{BufMut, BytesMut};
 use std::io::Result;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};

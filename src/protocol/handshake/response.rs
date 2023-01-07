@@ -1,4 +1,4 @@
-use crate::HandshakeMethod;
+use crate::protocol::{HandshakeMethod, SOCKS_VERSION};
 use bytes::{BufMut, BytesMut};
 use std::io::{Error, ErrorKind, Result};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -28,7 +28,7 @@ impl HandshakeResponse {
     {
         let ver = r.read_u8().await?;
 
-        if ver != crate::SOCKS_VERSION {
+        if ver != SOCKS_VERSION {
             return Err(Error::new(
                 ErrorKind::Unsupported,
                 format!("Unsupported SOCKS version {0:#x}", ver),
@@ -50,7 +50,7 @@ impl HandshakeResponse {
     }
 
     pub fn write_to_buf<B: BufMut>(&self, buf: &mut B) {
-        buf.put_u8(crate::SOCKS_VERSION);
+        buf.put_u8(SOCKS_VERSION);
         buf.put_u8(u8::from(self.method));
     }
 
