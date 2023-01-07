@@ -2,7 +2,7 @@
 
 Fundamental abstractions and async read / write functions for SOCKS5 protocol and Relatively low-level asynchronized SOCKS5 server implementation based on tokio.
 
-This repo hosts at [socks5-impl](https://github.com/ssrlive/socks5-impl/tree/master/socks5-impl)
+This repo hosts at [socks5-impl](https://github.com/ssrlive/socks5-impl/tree/master/)
 
 [![Version](https://img.shields.io/crates/v/socks5-impl.svg?style=flat)](https://crates.io/crates/socks5-impl)
 [![Documentation](https://img.shields.io/badge/docs-release-brightgreen.svg?style=flat)](https://docs.rs/socks5-impl)
@@ -22,9 +22,9 @@ This repo hosts at [socks5-impl](https://github.com/ssrlive/socks5-impl/tree/mas
 
 ## Usage
 
-The entry point of this crate is [`socks5_impl::server::Server`](https://docs.rs/socks5-impl/latest/server/struct.Server.html).
+The entry point of this crate is [`socks5_impl::server::Server`](https://docs.rs/socks5-impl/latest/socks5_impl/server/struct.Server.html).
 
-Check [examples](https://github.com/ssrlive/socks5-impl/tree/master/socks5-impl/examples) for usage examples.
+Check [examples](https://github.com/ssrlive/socks5-impl/tree/master/examples) for usage examples.
 
 ## Example
 
