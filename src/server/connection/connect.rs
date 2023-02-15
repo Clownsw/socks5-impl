@@ -22,21 +22,23 @@ pub struct Connect<S> {
     _state: S,
 }
 
-#[derive(Debug)]
-pub struct NeedReply;
-
-#[derive(Debug)]
-pub struct Ready;
-
-impl Connect<NeedReply> {
+impl<S: Default> Connect<S> {
     #[inline]
     pub(super) fn new(stream: TcpStream) -> Self {
         Self {
             stream,
-            _state: NeedReply,
+            _state: S::default(),
         }
     }
+}
 
+#[derive(Debug, Default)]
+pub struct NeedReply;
+
+#[derive(Debug, Default)]
+pub struct Ready;
+
+impl Connect<NeedReply> {
     /// Reply to the client.
     #[inline]
     pub async fn reply(mut self, reply: Reply, addr: Address) -> Result<Connect<Ready>> {
@@ -65,14 +67,6 @@ impl Connect<NeedReply> {
 }
 
 impl Connect<Ready> {
-    #[inline]
-    fn new(stream: TcpStream) -> Self {
-        Self {
-            stream,
-            _state: Ready,
-        }
-    }
-
     /// Returns the local address that this stream is bound to.
     #[inline]
     pub fn local_addr(&self) -> Result<SocketAddr> {

@@ -1,8 +1,8 @@
-use async_trait::async_trait;
 use crate::protocol::{
     handshake::password::{Request as PasswordRequest, Response as PasswordResponse},
     HandshakeMethod,
 };
+use async_trait::async_trait;
 use std::io::{Error, ErrorKind, Result};
 use tokio::net::TcpStream;
 

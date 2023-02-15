@@ -1,8 +1,10 @@
 use self::{associate::Associate, bind::Bind, connect::Connect};
-use crate::server::Auth;
-use crate::protocol::{
-    Address, Command, HandshakeMethod, HandshakeRequest, HandshakeResponse, Reply, Request,
-    Response,
+use crate::{
+    protocol::{
+        Address, Command, HandshakeMethod, HandshakeRequest, HandshakeResponse, Reply, Request,
+        Response,
+    },
+    server::Auth,
 };
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},

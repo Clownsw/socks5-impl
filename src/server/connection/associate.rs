@@ -1,5 +1,5 @@
-use bytes::{Bytes, BytesMut};
 use crate::protocol::{Address, Reply, Response, UdpHeader};
+use bytes::{Bytes, BytesMut};
 use std::{
     io::Result,
     net::SocketAddr,
@@ -11,29 +11,29 @@ use tokio::{
 };
 
 /// Socks5 connection type `Associate`
-///
-/// [`AssociatedUdpSocket`](https://docs.rs/socks5-impl/latest/socks5_impl/server/connection/associate/struct.AssociatedUdpSocket.html) can be used as the associated UDP socket.
 #[derive(Debug)]
 pub struct Associate<S> {
     stream: TcpStream,
     _state: S,
 }
 
-#[derive(Debug)]
-pub struct NeedReply;
-
-#[derive(Debug)]
-pub struct Ready;
-
-impl Associate<NeedReply> {
+impl<S: Default> Associate<S> {
     #[inline]
     pub(super) fn new(stream: TcpStream) -> Self {
         Self {
             stream,
-            _state: NeedReply,
+            _state: S::default(),
         }
     }
+}
 
+#[derive(Debug, Default)]
+pub struct NeedReply;
+
+#[derive(Debug, Default)]
+pub struct Ready;
+
+impl Associate<NeedReply> {
     /// Reply the associated UDP socket address to the client.
     #[inline]
     pub async fn reply(mut self, reply: Reply, addr: Address) -> Result<Associate<Ready>> {
@@ -62,14 +62,6 @@ impl Associate<NeedReply> {
 }
 
 impl Associate<Ready> {
-    #[inline]
-    fn new(stream: TcpStream) -> Self {
-        Self {
-            stream,
-            _state: Ready,
-        }
-    }
-
     /// Wait until the client closes this TCP connection.
     ///
     /// Socks5 protocol defines that when the client closes the TCP connection used to send the associate command, the server should release the associated UDP socket.
@@ -111,6 +103,8 @@ impl Associate<Ready> {
 /// You can create this struct by using [`AssociatedUdpSocket::from::<(UdpSocket, usize)>()`](#impl-From<UdpSocket>), the first element of the tuple is the UDP socket, the second element is the receiving buffer size.
 ///
 /// This struct can also be revert into a raw tokio UDP socket with [`UdpSocket::from::<AssociatedUdpSocket>()`](#impl-From<AssociatedUdpSocket>).
+///
+/// [`AssociatedUdpSocket`](https://docs.rs/socks5-impl/latest/socks5_impl/server/connection/associate/struct.AssociatedUdpSocket.html) can be used as the associated UDP socket.
 #[derive(Debug)]
 pub struct AssociatedUdpSocket {
     socket: UdpSocket,

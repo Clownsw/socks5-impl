@@ -22,24 +22,26 @@ pub struct Bind<S> {
     _state: S,
 }
 
-#[derive(Debug)]
-pub struct NeedFirstReply;
-
-#[derive(Debug)]
-pub struct NeedSecondReply;
-
-#[derive(Debug)]
-pub struct Ready;
-
-impl Bind<NeedFirstReply> {
+impl<S: Default> Bind<S> {
     #[inline]
     pub(super) fn new(stream: TcpStream) -> Self {
         Self {
             stream,
-            _state: NeedFirstReply,
+            _state: S::default(),
         }
     }
+}
 
+#[derive(Debug, Default)]
+pub struct NeedFirstReply;
+
+#[derive(Debug, Default)]
+pub struct NeedSecondReply;
+
+#[derive(Debug, Default)]
+pub struct Ready;
+
+impl Bind<NeedFirstReply> {
     /// Reply to the client the first time.
     #[inline]
     pub async fn reply(mut self, reply: Reply, addr: Address) -> Result<Bind<NeedSecondReply>> {
@@ -68,14 +70,6 @@ impl Bind<NeedFirstReply> {
 }
 
 impl Bind<NeedSecondReply> {
-    #[inline]
-    fn new(stream: TcpStream) -> Self {
-        Self {
-            stream,
-            _state: NeedSecondReply,
-        }
-    }
-
     /// Reply to the client the second time.
     #[inline]
     pub async fn reply(mut self, reply: Reply, addr: Address) -> Result<Bind<Ready>> {
@@ -104,14 +98,6 @@ impl Bind<NeedSecondReply> {
 }
 
 impl Bind<Ready> {
-    #[inline]
-    fn new(stream: TcpStream) -> Self {
-        Self {
-            stream,
-            _state: Ready,
-        }
-    }
-
     /// Returns the local address that this stream is bound to.
     #[inline]
     pub fn local_addr(&self) -> Result<SocketAddr> {

@@ -4,7 +4,6 @@ use std::{
     fmt::{Display, Formatter, Result as FmtResult},
     io::{Cursor, Error, ErrorKind, Result},
     net::{Ipv4Addr, Ipv6Addr, SocketAddr},
-    vec,
 };
 use tokio::io::{AsyncRead, AsyncReadExt};
 
