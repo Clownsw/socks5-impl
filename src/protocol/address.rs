@@ -15,7 +15,7 @@ pub enum Address {
 
 impl Address {
     const ATYP_IPV4: u8 = 0x01;
-    const ATYP_DOMN: u8 = 0x03;
+    const ATYP_DOMAIN: u8 = 0x03;
     const ATYP_IPV6: u8 = 0x04;
 
     pub fn unspecified() -> Self {
@@ -32,7 +32,7 @@ impl Address {
                 stream.read_exact(&mut buf).await?;
                 addr_data.extend_from_slice(&buf);
             }
-            Self::ATYP_DOMN => {
+            Self::ATYP_DOMAIN => {
                 let len = stream.read_u8().await? as usize;
                 let mut buf = vec![0; len + 2];
                 stream.read_exact(&mut buf).await?;
@@ -57,25 +57,25 @@ impl Address {
 
     pub fn from_data(data: &[u8]) -> Result<Self> {
         let mut rdr = Cursor::new(data);
-        let atyp = ReadBytesExt::read_u8(&mut rdr).unwrap();
+        let atyp = ReadBytesExt::read_u8(&mut rdr)?;
         match atyp {
             Self::ATYP_IPV4 => {
                 let addr = Ipv4Addr::new(
-                    ReadBytesExt::read_u8(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u8(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u8(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u8(&mut rdr).unwrap(),
+                    ReadBytesExt::read_u8(&mut rdr)?,
+                    ReadBytesExt::read_u8(&mut rdr)?,
+                    ReadBytesExt::read_u8(&mut rdr)?,
+                    ReadBytesExt::read_u8(&mut rdr)?,
                 );
 
-                let port = ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap();
+                let port = ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?;
 
                 Ok(Self::SocketAddress(SocketAddr::from((addr, port))))
             }
-            Self::ATYP_DOMN => {
-                let len = ReadBytesExt::read_u8(&mut rdr).unwrap() as usize;
+            Self::ATYP_DOMAIN => {
+                let len = ReadBytesExt::read_u8(&mut rdr)? as usize;
                 let mut buf = data[2..2 + len + 2].to_vec();
 
-                let port = ReadBytesExt::read_u16::<BigEndian>(&mut &buf[len..]).unwrap();
+                let port = ReadBytesExt::read_u16::<BigEndian>(&mut &buf[len..])?;
                 buf.truncate(len);
 
                 let addr = match String::from_utf8(buf) {
@@ -92,16 +92,16 @@ impl Address {
             }
             Self::ATYP_IPV6 => {
                 let addr = Ipv6Addr::new(
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
-                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
+                    ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?,
                 );
-                let port = ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap();
+                let port = ReadBytesExt::read_u16::<BigEndian>(&mut rdr)?;
                 Ok(Self::SocketAddress(SocketAddr::from((addr, port))))
             }
             atyp => Err(Error::new(
@@ -134,7 +134,7 @@ impl Address {
             },
             Self::DomainAddress(addr, port) => {
                 let addr = addr.as_bytes();
-                buf.put_u8(Self::ATYP_DOMN);
+                buf.put_u8(Self::ATYP_DOMAIN);
                 buf.put_u8(addr.len() as u8);
                 buf.put_slice(addr);
                 buf.put_u16(*port);
