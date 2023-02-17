@@ -40,10 +40,7 @@ impl Address {
         }
     }
 
-    pub async fn read_from<R>(stream: &mut R) -> Result<Self>
-    where
-        R: AsyncRead + Unpin,
-    {
+    pub async fn read_from<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
         let atyp = stream.read_u8().await?;
 
         match atyp {

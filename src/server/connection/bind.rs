@@ -30,6 +30,24 @@ impl<S: Default> Bind<S> {
             _state: S::default(),
         }
     }
+
+    /// Returns the local address that this stream is bound to.
+    #[inline]
+    pub fn local_addr(&self) -> Result<SocketAddr> {
+        self.stream.local_addr()
+    }
+
+    /// Returns the remote address that this stream is connected to.
+    #[inline]
+    pub fn peer_addr(&self) -> Result<SocketAddr> {
+        self.stream.peer_addr()
+    }
+
+    /// Shutdown the TCP stream.
+    #[inline]
+    pub async fn shutdown(&mut self) -> Result<()> {
+        self.stream.shutdown().await
+    }
 }
 
 #[derive(Debug, Default)]
@@ -49,24 +67,6 @@ impl Bind<NeedFirstReply> {
         resp.write_to(&mut self.stream).await?;
         Ok(Bind::<NeedSecondReply>::new(self.stream))
     }
-
-    /// Returns the local address that this stream is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.stream.local_addr()
-    }
-
-    /// Returns the remote address that this stream is connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.stream.peer_addr()
-    }
-
-    /// Shutdown the TCP stream.
-    #[inline]
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.stream.shutdown().await
-    }
 }
 
 impl Bind<NeedSecondReply> {
@@ -77,49 +77,13 @@ impl Bind<NeedSecondReply> {
         resp.write_to(&mut self.stream).await?;
         Ok(Bind::<Ready>::new(self.stream))
     }
-
-    /// Returns the local address that this stream is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.stream.local_addr()
-    }
-
-    /// Returns the remote address that this stream is connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.stream.peer_addr()
-    }
-
-    /// Shutdown the TCP stream.
-    #[inline]
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.stream.shutdown().await
-    }
 }
 
 impl Bind<Ready> {
-    /// Returns the local address that this stream is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.stream.local_addr()
-    }
-
-    /// Returns the remote address that this stream is connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.stream.peer_addr()
-    }
-
     /// Split the connection into a read and a write half.
     #[inline]
     pub fn split(&mut self) -> (ReadHalf, WriteHalf) {
         self.stream.split()
-    }
-
-    /// Shutdown the TCP stream.
-    #[inline]
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.stream.shutdown().await
     }
 }
 

@@ -25,6 +25,24 @@ impl<S: Default> Associate<S> {
             _state: S::default(),
         }
     }
+
+    /// Returns the local address that this stream is bound to.
+    #[inline]
+    pub fn local_addr(&self) -> Result<SocketAddr> {
+        self.stream.local_addr()
+    }
+
+    /// Returns the remote address that this stream is connected to.
+    #[inline]
+    pub fn peer_addr(&self) -> Result<SocketAddr> {
+        self.stream.peer_addr()
+    }
+
+    /// Shutdown the TCP stream.
+    #[inline]
+    pub async fn shutdown(&mut self) -> Result<()> {
+        self.stream.shutdown().await
+    }
 }
 
 #[derive(Debug, Default)]
@@ -41,24 +59,6 @@ impl Associate<NeedReply> {
         resp.write_to(&mut self.stream).await?;
         Ok(Associate::<Ready>::new(self.stream))
     }
-
-    /// Returns the local address that this stream is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.stream.local_addr()
-    }
-
-    /// Returns the remote address that this stream is connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.stream.peer_addr()
-    }
-
-    /// Shutdown the TCP stream.
-    #[inline]
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.stream.shutdown().await
-    }
 }
 
 impl Associate<Ready> {
@@ -73,24 +73,6 @@ impl Associate<Ready> {
                 Err(err) => break Err(err),
             }
         }
-    }
-
-    /// Returns the local address that this stream is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.stream.local_addr()
-    }
-
-    /// Returns the remote address that this stream is connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.stream.peer_addr()
-    }
-
-    /// Shutdown the TCP stream.
-    #[inline]
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.stream.shutdown().await
     }
 }
 
@@ -116,18 +98,6 @@ impl AssociatedUdpSocket {
     #[inline]
     pub async fn connect<A: ToSocketAddrs>(&self, addr: A) -> Result<()> {
         self.socket.connect(addr).await
-    }
-
-    /// Returns the local address that this socket is bound to.
-    #[inline]
-    pub fn local_addr(&self) -> Result<SocketAddr> {
-        self.socket.local_addr()
-    }
-
-    /// Returns the socket address of the remote peer this socket was connected to.
-    #[inline]
-    pub fn peer_addr(&self) -> Result<SocketAddr> {
-        self.socket.peer_addr()
     }
 
     /// Get the maximum UDP packet size, with socks5 UDP header included.

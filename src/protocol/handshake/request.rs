@@ -25,10 +25,7 @@ impl HandshakeRequest {
         Self { methods }
     }
 
-    pub async fn read_from<R>(r: &mut R) -> Result<Self>
-    where
-        R: AsyncRead + Unpin,
-    {
+    pub async fn read_from<R: AsyncRead + Unpin>(r: &mut R) -> Result<Self> {
         let ver = r.read_u8().await?;
 
         if ver != SOCKS_VERSION {
@@ -55,10 +52,7 @@ impl HandshakeRequest {
         Ok(Self { methods })
     }
 
-    pub async fn write_to<W>(&self, w: &mut W) -> Result<()>
-    where
-        W: AsyncWrite + Unpin,
-    {
+    pub async fn write_to<W: AsyncWrite + Unpin>(&self, w: &mut W) -> Result<()> {
         let mut buf = BytesMut::with_capacity(self.serialized_len());
         self.write_to_buf(&mut buf);
         w.write_all(&buf).await
