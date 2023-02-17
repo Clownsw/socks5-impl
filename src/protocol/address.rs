@@ -22,24 +22,6 @@ impl Address {
         Address::SocketAddress(SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)))
     }
 
-    pub fn to_socket_addr(&self) -> Result<SocketAddr> {
-        match self {
-            Address::SocketAddress(addr) => Ok(*addr),
-            Address::DomainAddress(addr, port) => {
-                if let Ok(addr) = addr.parse::<Ipv4Addr>() {
-                    Ok(SocketAddr::from((addr, *port)))
-                } else if let Ok(addr) = addr.parse::<Ipv6Addr>() {
-                    Ok(SocketAddr::from((addr, *port)))
-                } else {
-                    Err(Error::new(
-                        ErrorKind::Unsupported,
-                        format!("domain address {addr} is not supported"),
-                    ))
-                }
-            }
-        }
-    }
-
     pub async fn read_from<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
         let atyp = stream.read_u8().await?;
 
@@ -153,6 +135,28 @@ impl Display for Address {
         match self {
             Address::DomainAddress(hostname, port) => write!(f, "{hostname}:{port}"),
             Address::SocketAddress(socket_addr) => write!(f, "{socket_addr}"),
+        }
+    }
+}
+
+impl TryFrom<Address> for SocketAddr {
+    type Error = Error;
+
+    fn try_from(address: Address) -> std::result::Result<Self, Self::Error> {
+        match address {
+            Address::SocketAddress(addr) => Ok(addr),
+            Address::DomainAddress(addr, port) => {
+                if let Ok(addr) = addr.parse::<Ipv4Addr>() {
+                    Ok(SocketAddr::from((addr, port)))
+                } else if let Ok(addr) = addr.parse::<Ipv6Addr>() {
+                    Ok(SocketAddr::from((addr, port)))
+                } else {
+                    Err(Self::Error::new(
+                        ErrorKind::Unsupported,
+                        format!("domain address {addr} is not supported"),
+                    ))
+                }
+            }
         }
     }
 }
