@@ -40,7 +40,7 @@ async fn main() -> io::Result<()> {
     let listener = TcpListener::bind("127.0.0.1:5000").await?;
     let (mut stream, _) = listener.accept().await?;
 
-    let hs_req = HandshakeRequest::read_from(&mut stream).await?;
+    let hs_req = HandshakeRequest::from_stream(&mut stream).await?;
 
     if hs_req.methods.contains(&HandshakeMethod::None) {
         let hs_resp = HandshakeResponse::new(HandshakeMethod::None);
@@ -55,7 +55,7 @@ async fn main() -> io::Result<()> {
         ));
     }
 
-    let req = match Request::read_from(&mut stream).await {
+    let req = match Request::from_stream(&mut stream).await {
         Ok(req) => req,
         Err(err) => {
             let resp = Response::new(Reply::GeneralFailure, Address::unspecified());

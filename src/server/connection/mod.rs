@@ -37,7 +37,7 @@ impl IncomingConnection {
             return Err(err);
         }
 
-        let req = match Request::read_from(&mut self.stream).await {
+        let req = match Request::from_stream(&mut self.stream).await {
             Ok(req) => req,
             Err(err) => {
                 let resp = Response::new(Reply::GeneralFailure, Address::unspecified());
@@ -83,7 +83,7 @@ impl IncomingConnection {
 
     #[inline]
     async fn auth(&mut self) -> Result<()> {
-        let hs_req = HandshakeRequest::read_from(&mut self.stream).await?;
+        let hs_req = HandshakeRequest::from_stream(&mut self.stream).await?;
         let chosen_method = self.auth.as_handshake_method();
 
         if hs_req.methods.contains(&chosen_method) {

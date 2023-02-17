@@ -23,13 +23,13 @@ impl UdpHeader {
         Self { frag, address }
     }
 
-    pub async fn read_from<R: AsyncRead + Unpin>(r: &mut R) -> Result<Self> {
+    pub async fn from_stream<R: AsyncRead + Unpin>(r: &mut R) -> Result<Self> {
         let mut buf = [0; 3];
         r.read_exact(&mut buf).await?;
 
         let frag = buf[2];
 
-        let address = Address::read_from(r).await?;
+        let address = Address::from_stream(r).await?;
         Ok(Self { frag, address })
     }
 

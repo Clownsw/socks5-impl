@@ -25,7 +25,7 @@ impl HandshakeRequest {
         Self { methods }
     }
 
-    pub async fn read_from<R: AsyncRead + Unpin>(r: &mut R) -> Result<Self> {
+    pub async fn from_stream<R: AsyncRead + Unpin>(r: &mut R) -> Result<Self> {
         let ver = r.read_u8().await?;
 
         if ver != SOCKS_VERSION {

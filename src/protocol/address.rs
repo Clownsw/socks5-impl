@@ -22,7 +22,7 @@ impl Address {
         Address::SocketAddress(SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)))
     }
 
-    pub async fn read_from<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
+    pub async fn from_stream<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
         let atyp = stream.read_u8().await?;
 
         match atyp {

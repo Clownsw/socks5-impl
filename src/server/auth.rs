@@ -85,7 +85,7 @@ impl Auth for Password {
     }
 
     async fn execute(&self, stream: &mut TcpStream) -> Result<()> {
-        let req = PasswordRequest::read_from(stream).await?;
+        let req = PasswordRequest::from_stream(stream).await?;
 
         if (&req.username, &req.password) == (&self.username, &self.password) {
             let resp = PasswordResponse::new(true);
