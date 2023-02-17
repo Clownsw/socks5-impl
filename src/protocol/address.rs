@@ -15,22 +15,51 @@ pub enum Address {
 
 impl Address {
     const ATYP_IPV4: u8 = 0x01;
-    const ATYP_FQDN: u8 = 0x03;
+    const ATYP_DOMN: u8 = 0x03;
     const ATYP_IPV6: u8 = 0x04;
 
     pub fn unspecified() -> Self {
         Address::SocketAddress(SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)))
     }
 
-    pub async fn from_stream<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
+    pub async fn addr_data_from_stream<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Vec<u8>> {
+        let mut addr_data = Vec::new();
         let atyp = stream.read_u8().await?;
-
+        addr_data.push(atyp);
         match atyp {
             Self::ATYP_IPV4 => {
                 let mut buf = [0; 6];
                 stream.read_exact(&mut buf).await?;
-                let mut rdr = Cursor::new(buf);
+                addr_data.extend_from_slice(&buf);
+            }
+            Self::ATYP_DOMN => {
+                let len = stream.read_u8().await? as usize;
+                let mut buf = vec![0; len + 2];
+                stream.read_exact(&mut buf).await?;
 
+                addr_data.push(len as u8);
+                addr_data.extend_from_slice(&buf);
+            }
+            Self::ATYP_IPV6 => {
+                let mut buf = [0; 18];
+                stream.read_exact(&mut buf).await?;
+                addr_data.extend_from_slice(&buf);
+            }
+            atyp => {
+                return Err(Error::new(
+                    ErrorKind::Unsupported,
+                    format!("Unsupported address type {0:#x}", atyp),
+                ));
+            }
+        }
+        Ok(addr_data)
+    }
+
+    pub fn from_data(data: &[u8]) -> Result<Self> {
+        let mut rdr = Cursor::new(data);
+        let atyp = ReadBytesExt::read_u8(&mut rdr).unwrap();
+        match atyp {
+            Self::ATYP_IPV4 => {
                 let addr = Ipv4Addr::new(
                     ReadBytesExt::read_u8(&mut rdr).unwrap(),
                     ReadBytesExt::read_u8(&mut rdr).unwrap(),
@@ -42,11 +71,9 @@ impl Address {
 
                 Ok(Self::SocketAddress(SocketAddr::from((addr, port))))
             }
-            Self::ATYP_FQDN => {
-                let len = stream.read_u8().await? as usize;
-
-                let mut buf = vec![0; len + 2];
-                stream.read_exact(&mut buf).await?;
+            Self::ATYP_DOMN => {
+                let len = ReadBytesExt::read_u8(&mut rdr).unwrap() as usize;
+                let mut buf = data[2..2 + len + 2].to_vec();
 
                 let port = ReadBytesExt::read_u16::<BigEndian>(&mut &buf[len..]).unwrap();
                 buf.truncate(len);
@@ -64,10 +91,6 @@ impl Address {
                 Ok(Self::DomainAddress(addr, port))
             }
             Self::ATYP_IPV6 => {
-                let mut buf = [0; 18];
-                stream.read_exact(&mut buf).await?;
-                let mut rdr = Cursor::new(buf);
-
                 let addr = Ipv6Addr::new(
                     ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
                     ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
@@ -78,9 +101,7 @@ impl Address {
                     ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
                     ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap(),
                 );
-
                 let port = ReadBytesExt::read_u16::<BigEndian>(&mut rdr).unwrap();
-
                 Ok(Self::SocketAddress(SocketAddr::from((addr, port))))
             }
             atyp => Err(Error::new(
@@ -88,6 +109,11 @@ impl Address {
                 format!("Unsupported address type {0:#x}", atyp),
             )),
         }
+    }
+
+    pub async fn from_stream<R: AsyncRead + Unpin>(stream: &mut R) -> Result<Self> {
+        let addr_data = Self::addr_data_from_stream(stream).await?;
+        Self::from_data(&addr_data)
     }
 
     pub fn write_to_buf<B: BufMut>(&self, buf: &mut B) {
@@ -107,9 +133,10 @@ impl Address {
                 }
             },
             Self::DomainAddress(addr, port) => {
-                buf.put_u8(Self::ATYP_FQDN);
+                let addr = addr.as_bytes();
+                buf.put_u8(Self::ATYP_DOMN);
                 buf.put_u8(addr.len() as u8);
-                buf.put_slice(addr.as_bytes());
+                buf.put_slice(addr);
                 buf.put_u16(*port);
             }
         }
@@ -158,6 +185,14 @@ impl TryFrom<Address> for SocketAddr {
                 }
             }
         }
+    }
+}
+
+impl From<Address> for Vec<u8> {
+    fn from(addr: Address) -> Self {
+        let mut buf = Vec::with_capacity(addr.serialized_len());
+        addr.write_to_buf(&mut buf);
+        buf
     }
 }
 
